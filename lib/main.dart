@@ -13,6 +13,8 @@ import 'features/contacts/providers/contacts_provider.dart';
 import 'features/call/providers/call_provider.dart';
 import 'features/history/providers/history_provider.dart';
 
+import 'features/call/widgets/active_call_overlay.dart';
+
 import 'package:go_router/go_router.dart';
 
 void main() async {
@@ -56,6 +58,14 @@ class ConnectCallApp extends StatelessWidget {
             themeMode: themeProvider.themeMode,
             routerConfig: router,
             debugShowCheckedModeBanner: false,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  if (child != null) child,
+                  const ActiveCallOverlay(), // The floating PiP widget
+                ],
+              );
+            },
           );
         },
       ),

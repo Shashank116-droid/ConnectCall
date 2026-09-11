@@ -13,6 +13,7 @@ class CallProvider extends ChangeNotifier {
   bool _isCameraOn = true;
   bool _isSpeakerOn = false;
   bool _isLocalUserJoined = false;
+  bool _isMinimized = false;
   String _networkQuality = 'Good';
 
   String? _endReason;
@@ -27,6 +28,7 @@ class CallProvider extends ChangeNotifier {
   bool get isCameraOn => _isCameraOn;
   bool get isSpeakerOn => _isSpeakerOn;
   bool get isLocalUserJoined => _isLocalUserJoined;
+  bool get isMinimized => _isMinimized;
   String get networkQuality => _networkQuality;
   
   bool get remoteConnected => _callingService.connectedPeers.isNotEmpty;
@@ -192,10 +194,18 @@ class CallProvider extends ChangeNotifier {
     
     _currentCall = null;
     _isLocalUserJoined = false;
+    _isMinimized = false;
     notifyListeners();
 
     if (myUid != null) {
       await _callingService.hangUp(callId, myUid);
+    }
+  }
+
+  void setMinimized(bool val) {
+    if (_isMinimized != val) {
+      _isMinimized = val;
+      notifyListeners();
     }
   }
 

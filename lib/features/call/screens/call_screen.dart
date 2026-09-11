@@ -68,147 +68,167 @@ class _CallScreenState extends State<CallScreen> {
       displayInitial = displayName[0].toUpperCase();
     }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF000A1F),
-      body: Container(
-        decoration: BoxDecoration(
-          color: call.isVideo ? Colors.black : null,
-          gradient: call.isVideo ? null : const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF001F3F), Color(0xFF000A1F)], 
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        callProvider.setMinimized(true);
+        context.goNamed('home');
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFF000A1F),
+        body: Container(
+          decoration: BoxDecoration(
+            color: call.isVideo ? Colors.black : null,
+            gradient: call.isVideo ? null : const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF001F3F), Color(0xFF000A1F)], 
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // Remote Video Grid
-              if (call.isVideo && callProvider.remoteConnected)
-                Positioned.fill(child: _buildVideoGrid(remoteRenderers))
-              else if (callProvider.remoteConnected && call.isVideo)
-                const Positioned.fill(child: Center(
-                  child: Icon(Icons.person, size: 120, color: Colors.white54),
-                ))
-              else if (call.isVideo)
-                const Positioned.fill(child: Center(
-                  child: Text(
-                    'Waiting for others to join...',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                )),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                // Remote Video Grid
+                if (call.isVideo && callProvider.remoteConnected)
+                  Positioned.fill(child: _buildVideoGrid(remoteRenderers))
+                else if (callProvider.remoteConnected && call.isVideo)
+                  const Positioned.fill(child: Center(
+                    child: Icon(Icons.person, size: 120, color: Colors.white54),
+                  ))
+                else if (call.isVideo)
+                  const Positioned.fill(child: Center(
+                    child: Text(
+                      'Waiting for others to join...',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  )),
 
-              // Local Video (floating picture-in-picture)
-              if (call.isVideo && callProvider.isLocalUserJoined && (callProvider.isCameraOn || callProvider.isScreenSharing))
+                // Top Left Back Button (Minimize)
                 Positioned(
-                  top: 20,
-                  right: 20,
-                  width: 120,
-                  height: 170,
-                  child: Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: RTCVideoView(
-                          callProvider.localRenderer,
-                          mirror: !callProvider.isScreenSharing, // Don't mirror screen share
-                          objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                        ),
-                      ),
-                      if (callProvider.isScreenSharing)
-                        Positioned(
-                          bottom: 4,
-                          left: 4,
-                          right: 4,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.amber,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: const Text(
-                              'Sharing Screen',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                    ],
+                  top: 10,
+                  left: 10,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                    onPressed: () {
+                      callProvider.setMinimized(true);
+                      context.goNamed('home');
+                    },
                   ),
                 ),
 
-              // Network Quality Indicator
-              if (callProvider.remoteConnected)
-                Positioned(
-                  top: 20,
-                  left: 20,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.black54,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                // Local Video (floating picture-in-picture)
+                if (call.isVideo && callProvider.isLocalUserJoined && (callProvider.isCameraOn || callProvider.isScreenSharing))
+                  Positioned(
+                    top: 20,
+                    right: 20,
+                    width: 120,
+                    height: 170,
+                    child: Stack(
                       children: [
-                        Icon(
-                          callProvider.networkQuality == 'Poor'
-                              ? Icons.signal_cellular_0_bar
-                              : callProvider.networkQuality == 'Fair'
-                                  ? Icons.signal_cellular_alt
-                                  : Icons.signal_cellular_4_bar,
-                          color: callProvider.networkQuality == 'Poor'
-                              ? Colors.red
-                              : callProvider.networkQuality == 'Fair'
-                                  ? Colors.amber
-                                  : Colors.green,
-                          size: 16,
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: RTCVideoView(
+                            callProvider.localRenderer,
+                            mirror: !callProvider.isScreenSharing, // Don't mirror screen share
+                            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+                          ),
                         ),
-                        const SizedBox(width: 6),
+                        if (callProvider.isScreenSharing)
+                          Positioned(
+                            bottom: 4,
+                            left: 4,
+                            right: 4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.amber,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Sharing Screen',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                // Network Quality Indicator
+                if (callProvider.remoteConnected)
+                  Positioned(
+                    top: 60, // Moved down to avoid overlapping the back button
+                    left: 20,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            callProvider.networkQuality == 'Poor'
+                                ? Icons.signal_cellular_0_bar
+                                : callProvider.networkQuality == 'Fair'
+                                    ? Icons.signal_cellular_alt
+                                    : Icons.signal_cellular_4_bar,
+                            color: callProvider.networkQuality == 'Poor'
+                                ? Colors.red
+                                : callProvider.networkQuality == 'Fair'
+                                    ? Colors.amber
+                                    : Colors.green,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            callProvider.networkQuality,
+                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // Audio is handled by the PeerConnection directly — no RTCVideoView needed
+
+                // Caller Info Overlay (audio-only calls)
+                if (!call.isVideo)
+                  Positioned(
+                    top: 80,
+                    left: 0,
+                    right: 0,
+                    child: Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 70,
+                          backgroundColor: Colors.blue.withOpacity(0.2),
+                          child: Text(
+                            displayInitial,
+                            style: TextStyle(fontSize: 40, color: Colors.blue.shade700, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         Text(
-                          callProvider.networkQuality,
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                          displayName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          call.status == 'connected' ? '${call.joinedIds.length} connected' : 'Calling...',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.6), fontSize: 18),
                         ),
                       ],
                     ),
                   ),
-                ),
-
-              // Audio is handled by the PeerConnection directly — no RTCVideoView needed
-
-              // Caller Info Overlay (audio-only calls)
-              if (!call.isVideo)
-                Positioned(
-                  top: 80,
-                  left: 0,
-                  right: 0,
-                  child: Column(
-                    children: [
-                      CircleAvatar(
-                        radius: 70,
-                        backgroundColor: Colors.blue.withOpacity(0.2),
-                        child: Text(
-                          displayInitial,
-                          style: TextStyle(fontSize: 40, color: Colors.blue.shade700, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        displayName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        call.status == 'connected' ? '${call.joinedIds.length} connected' : 'Calling...',
-                        style: TextStyle(
-                            color: Colors.white.withOpacity(0.6), fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ),
 
               // Controls
               Positioned(
@@ -254,6 +274,13 @@ class _CallScreenState extends State<CallScreen> {
                             iconColor: callProvider.isCameraOn ? Colors.white : Colors.black,
                             onPressed: callProvider.toggleCamera,
                           ),
+                          if (callProvider.isCameraOn)
+                            _buildControlButton(
+                              icon: Icons.flip_camera_ios,
+                              color: Colors.white24,
+                              iconColor: Colors.white,
+                              onPressed: callProvider.switchCamera,
+                            ),
                           _buildControlButton(
                             icon: callProvider.isScreenSharing ? Icons.stop_screen_share : Icons.screen_share,
                             color: callProvider.isScreenSharing ? Colors.amber : Colors.white24,
@@ -283,7 +310,8 @@ class _CallScreenState extends State<CallScreen> {
           ),
         ),
       ),
-    );
+     )
+      );
   }
 
   Widget _buildVideoGrid(List<RTCVideoRenderer> renderers) {
@@ -406,7 +434,7 @@ class _CallScreenState extends State<CallScreen> {
     return GestureDetector(
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,

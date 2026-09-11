@@ -31,8 +31,10 @@ class SplashScreen extends StatelessWidget {
 }
 
 class AppRouter {
+  static GoRouter? router;
+
   static GoRouter createRouter(AuthProvider authProvider) {
-    return GoRouter(
+    router = GoRouter(
       initialLocation: '/',
       refreshListenable: authProvider,
       redirect: (context, state) {
@@ -81,5 +83,6 @@ class AppRouter {
         ),
       ],
     );
+    return router!;
   }
 }
